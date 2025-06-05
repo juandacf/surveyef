@@ -11,7 +11,7 @@ namespace Application.Interface
         ICategoryOptionsRepository CategoryOptions { get; }
         IChaptersRepository Chapters { get; }
         IOptionQuestionsRepository OptionQuestions { get; }
-        OptionsResponseRepository OptionsResponses { get; }
+        IOptionsResponseRepository OptionsResponses { get; }
         IQuestionsRepository Questions { get; }
         ISubQuestionsrepository SubQuestions { get; }
         ISumaryOptionsRepository SumaryOptions { get; }

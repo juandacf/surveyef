@@ -6,7 +6,7 @@ using Domain.Entities;
 
 namespace Application.Interface
 {
-    public interface OptionsResponseRepository:IGenericRepository<OptionsResponse>
+    public interface IOptionsResponseRepository:IGenericRepository<OptionsResponse>
     {
         
     }
