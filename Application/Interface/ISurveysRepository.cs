@@ -6,8 +6,8 @@ using Domain.Entities;
 
 namespace Application.Interface
 {
-    public interface ISurveysRepository:IGenericRepository<Surveys>
+    public interface ISurveysRepository : IGenericRepository<Surveys>
     {
-        
+       
     }
 }
