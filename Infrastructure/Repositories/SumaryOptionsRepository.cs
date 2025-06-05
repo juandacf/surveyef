@@ -4,15 +4,16 @@ using System.Linq;
 using System.Threading.Tasks;
 using Application.Interface;
 using Domain.Entities;
+using Infrastructure.data;
 using Infrastructure.Data;
 
 namespace Infrastructure.Repositories
 {
-    public class SumaryOptionsRepository : GenericRepository<SumaryOption>, ISumaryOptionsRepository
+    public class SumaryOptionsRepository : GenericRepository<SumaryOptions>, ISumaryOptionsRepository
     {
-        protected readonly SurveyDbContext _context;
+        protected readonly TallerSurveyDbContext _context;
 
-        public SumaryOptionsRepository(SurveyDbContext context) : base(context)
+        public SumaryOptionsRepository(TallerSurveyDbContext context) : base(context)
         {
             _context = context;
         }
