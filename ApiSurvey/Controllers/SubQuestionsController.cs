@@ -2,7 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Application.DTOs.SubQuestions;
 using Application.Interface;
+using AutoMapper;
+using Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace SurveyApi.Controller;
@@ -10,86 +13,78 @@ namespace SurveyApi.Controller;
 public class SubQuestionsController : BaseApiController
 {
     private readonly IUnitOfWork _unitOfWork;
-
-    public SubQuestionsController(IUnitOfWork unitOfWork)
+    private readonly IMapper _mapper;
+    public SubQuestionsController(IUnitOfWork unitOfWork,IMapper mapper)
     {
         _unitOfWork = unitOfWork;
+        _mapper = mapper;
     }
 
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Get()
+    public async Task<ActionResult<IEnumerable<SubQuestionsDTO>>> Get()
     {
         var subQuestions = await _unitOfWork.SubQuestions.GetAllAsync();
-        return Ok(subQuestions);
+        return  _mapper.Map<List<SubQuestionsDTO>>(subQuestions);
     }
 
-    [HttpGet("{id}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Get(int id)
-    {
-        var subQuestion = await _unitOfWork.SubQuestions.GetByIdAsync(id);
-        if (subQuestion == null)
+        [HttpGet("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<SubQuestionsDTO>> Get(int id)
         {
-            return NotFound();
-        }
-        return Ok(subQuestion);
-    }
-
-    [HttpPost]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Post([FromBody] Domain.Entities.SubQuestions subQuestion)
-    {
-        if (subQuestion == null)
-        {
-            return BadRequest("SubQuestion cannot be null");
+            var subQuestion = await _unitOfWork.SubQuestions.GetByIdAsync(id);
+            if (subQuestion == null)
+            {
+                return NotFound($"Sub Question with id {id} was not found.");
+            }
+            return Ok(_mapper.Map<SubQuestionsDTO>(subQuestion));
         }
 
-        _unitOfWork.SubQuestions.Add(subQuestion);
-        await _unitOfWork.SaveAsync();
-        return CreatedAtAction(nameof(Get), new { id = subQuestion.Id }, subQuestion);
-    }
-
-    [HttpPut("{id}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Put(int id, [FromBody] Domain.Entities.SubQuestions subQuestion)
-    {
-        if (subQuestion == null || subQuestion.Id != id)
+        [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<SubQuestions>> Post(SubQuestionsDTO subQuestionDto)
         {
-            return BadRequest("SubQuestion cannot be null and ID must match");
+            var subQuestion = _mapper.Map<SubQuestions>(subQuestionDto);
+            _unitOfWork.SubQuestions.Add(subQuestion);
+            await _unitOfWork.SaveAsync();
+            if (subQuestion == null)
+            {
+                return BadRequest();
+            }
+            return CreatedAtAction(nameof(Post), new { id = subQuestionDto.Id }, subQuestion);
         }
 
-        var existingSubQuestion = await _unitOfWork.SubQuestions.GetByIdAsync(id);
-        if (existingSubQuestion == null)
+        [HttpPut("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> Put(int id, [FromBody] SubQuestionsDTO subQuestionDto)
         {
-            return NotFound();
+            // Validación: objeto nulo
+            if (subQuestionDto == null)
+                return NotFound();
+
+            var subQuestion = _mapper.Map<SubQuestions>(subQuestionDto);
+            _unitOfWork.SubQuestions.Update(subQuestion);
+            await _unitOfWork.SaveAsync();
+            return Ok(subQuestionDto);
         }
 
-        _unitOfWork.SubQuestions.Update(subQuestion);
-        await _unitOfWork.SaveAsync();
-        return Ok(subQuestion);
-    }
-
-    [HttpDelete("{id}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Delete(int id)
-    {
-        var subQuestion = await _unitOfWork.SubQuestions.GetByIdAsync(id);
-        if (subQuestion == null)
+        [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Delete(int id)
         {
-            return NotFound();
-        }
+            var subQuestion = await _unitOfWork.SubQuestions.GetByIdAsync(id);
+            if (subQuestion == null)
+                return NotFound();
 
         _unitOfWork.SubQuestions.Remove(subQuestion);
         await _unitOfWork.SaveAsync();
-        return Ok();
-    }
+
+        return NoContent();
+        }
 }

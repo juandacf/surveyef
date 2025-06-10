@@ -2,7 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Application.DTOs.Questions;
 using Application.Interface;
+using AutoMapper;
+using Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace SurveyApi.Controller;
@@ -10,86 +13,79 @@ namespace SurveyApi.Controller;
 public class QuestionsController : BaseApiController
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IMapper _mapper;
 
-    public QuestionsController(IUnitOfWork unitOfWork)
+    public QuestionsController(IUnitOfWork unitOfWork, IMapper mapper)
     {
         _unitOfWork = unitOfWork;
+        _mapper = mapper;
     }
 
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Get()
+    public async Task<ActionResult<IEnumerable<QuestionsDTO>>> Get()
     {
         var questions = await _unitOfWork.Questions.GetAllAsync();
-        return Ok(questions);
+        return _mapper.Map<List<QuestionsDTO>>(questions);
     }
 
-    [HttpGet("{id}")]
+   [HttpGet("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Get(int id)
+    public async Task<ActionResult<QuestionsDTO>> Get(int id)
     {
-        var question = await _unitOfWork.Questions.GetByIdAsync(id);
-        if (question == null)
+        var questions = await _unitOfWork.Questions.GetByIdAsync(id);
+        if (questions == null)
         {
-            return NotFound();
+            return NotFound($"Questions with id {id} was not found.");
         }
-        return Ok(question);
+        return Ok(_mapper.Map<QuestionsDTO>(questions));
     }
 
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Post([FromBody] Domain.Entities.Questions question)
+    public async Task<ActionResult<Questions>> Post(QuestionsDTO questionsDto)
     {
-        if (question == null)
-        {
-            return BadRequest("Question cannot be null");
-        }
-
-        _unitOfWork.Questions.Add(question);
+        var questions = _mapper.Map<Questions>(questionsDto);
+        _unitOfWork.Questions.Add(questions);
         await _unitOfWork.SaveAsync();
-        return CreatedAtAction(nameof(Get), new { id = question.Id }, question);
+        if (questions == null)
+        {
+            return BadRequest();
+        }
+        return CreatedAtAction(nameof(Post), new { id = questions.Id }, questions);
     }
 
-    [HttpPut("{id}")]
+        [HttpPut("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Put(int id, [FromBody] Domain.Entities.Questions question)
+    public async Task<IActionResult> Put(int id, [FromBody] QuestionsDTO questionsDto)
     {
-        if (question == null || question.Id != id)
-        {
-            return BadRequest("Question cannot be null or ID mismatch");
-        }
-
-        var existingQuestion = await _unitOfWork.Questions.GetByIdAsync(id);
-        if (existingQuestion == null)
-        {
+        // Validación: objeto nulo
+        if (questionsDto == null)
             return NotFound();
-        }
 
-        _unitOfWork.Questions.Update(question);
+        var questions = _mapper.Map<Questions>(questionsDto);
+        _unitOfWork.Questions.Update(questions);
         await _unitOfWork.SaveAsync();
-        return Ok(question);
+        return Ok(questionsDto);
     }
 
     [HttpDelete("{id}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Delete(int id)
     {
-        var question = await _unitOfWork.Questions.GetByIdAsync(id);
-        if (question == null)
-        {
+        var questions = await _unitOfWork.Questions.GetByIdAsync(id);
+        if (questions == null)
             return NotFound();
-        }
 
-        _unitOfWork.Questions.Remove(question);
+        _unitOfWork.Questions.Remove(questions);
         await _unitOfWork.SaveAsync();
-        return Ok();
+
+        return NoContent();
     }
 }

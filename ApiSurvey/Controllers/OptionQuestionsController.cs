@@ -2,7 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Application.DTOs.OptionQuestions;
 using Application.Interface;
+using AutoMapper;
+using Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace SurveyApi.Controller;
@@ -10,86 +13,78 @@ namespace SurveyApi.Controller;
 public class OptionQuestionsController : BaseApiController
 {
     private readonly IUnitOfWork _unitOfWork;
-
-    public OptionQuestionsController(IUnitOfWork unitOfWork)
+    private readonly IMapper _mapper;
+    public OptionQuestionsController(IUnitOfWork unitOfWork, IMapper mapper)
     {
         _unitOfWork = unitOfWork;
+         _mapper = mapper;
     }
 
     [HttpGet]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Get()
-    {
-        var optionQuestions = await _unitOfWork.OptionQuestions.GetAllAsync();
-        return Ok(optionQuestions);
-    }
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<IEnumerable<OptionQuestionsDTO>>> Get()
+        {
+            var optionQuestions = await _unitOfWork.OptionQuestions.GetAllAsync();
+            return _mapper.Map<List<OptionQuestionsDTO>>(optionQuestions);
+        }
 
     [HttpGet("{id}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Get(int id)
-    {
-        var optionQuestion = await _unitOfWork.OptionQuestions.GetByIdAsync(id);
-        if (optionQuestion == null)
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<OptionQuestionsDTO>> Get(int id)
         {
-            return NotFound();
+            var optionQuestion = await _unitOfWork.OptionQuestions.GetByIdAsync(id);
+            if (optionQuestion == null)
+            {
+                return NotFound($"Option Question with id {id} was not found.");
+            }
+            return Ok(_mapper.Map<OptionQuestionsDTO>(optionQuestion));
         }
-        return Ok(optionQuestion);
-    }
 
     [HttpPost]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Post([FromBody] Domain.Entities.OptionQuestions optionQuestion)
-    {
-        if (optionQuestion == null)
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<OptionQuestions>> Post(OptionQuestionsDTO optionQuestionDto)
         {
-            return BadRequest("OptionQuestion cannot be null");
+            var optionQuestion = _mapper.Map<OptionQuestions>(optionQuestionDto);
+            _unitOfWork.OptionQuestions.Add(optionQuestion);
+            await _unitOfWork.SaveAsync();
+            if (optionQuestion == null)
+            {
+                return BadRequest();
+            }
+            return CreatedAtAction(nameof(Post), new { id = optionQuestionDto.Id }, optionQuestion);
         }
 
-        _unitOfWork.OptionQuestions.Add(optionQuestion);
-        await _unitOfWork.SaveAsync();
-        return CreatedAtAction(nameof(Get), new { id = optionQuestion.Id }, optionQuestion);
-    }
-
-    [HttpPut("{id}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Put(int id, [FromBody] Domain.Entities.OptionQuestions optionQuestion)
-    {
-        if (optionQuestion == null || optionQuestion.Id != id)
+     [HttpPut("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> Put(int id, [FromBody] OptionQuestionsDTO optionQuestionsDto)
         {
-            return BadRequest("OptionQuestion cannot be null or ID mismatch");
-        }
+            // Validación: objeto nulo
+            if (optionQuestionsDto == null)
+                return NotFound();
 
-        var existingOptionQuestion = await _unitOfWork.OptionQuestions.GetByIdAsync(id);
-        if (existingOptionQuestion == null)
-        {
-            return NotFound();
+            var optionQuestions = _mapper.Map<OptionQuestions>(optionQuestionsDto);
+            _unitOfWork.OptionQuestions.Update(optionQuestions);
+            await _unitOfWork.SaveAsync();
+            return Ok(optionQuestionsDto);
         }
-
-        _unitOfWork.OptionQuestions.Update(optionQuestion);
-        await _unitOfWork.SaveAsync();
-        return Ok(optionQuestion);
-    }
 
     [HttpDelete("{id}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Delete(int id)
-    {
-        var optionQuestion = await _unitOfWork.OptionQuestions.GetByIdAsync(id);
-        if (optionQuestion == null)
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Delete(int id)
         {
+        var optionQuestions = await _unitOfWork.OptionQuestions.GetByIdAsync(id);
+        if (optionQuestions == null)
             return NotFound();
-        }
 
-        _unitOfWork.OptionQuestions.Remove(optionQuestion);
+        _unitOfWork.OptionQuestions.Remove(optionQuestions);
         await _unitOfWork.SaveAsync();
-        return Ok();
-    }
+
+        return NoContent();
+        }
 }

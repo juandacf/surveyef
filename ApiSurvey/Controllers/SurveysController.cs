@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Application.DTOs.Survey;
 using Application.Interface;
+using AutoMapper;
 using Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,93 +13,78 @@ namespace SurveyApi.Controller;
 public class SurveysController : BaseApiController
 {
     private readonly IUnitOfWork _unitOfWork;
-
-    public SurveysController(IUnitOfWork unitOfWork)
+    private readonly IMapper _mapper;
+    public SurveysController(IUnitOfWork unitOfWork, IMapper mapper)
     {
         _unitOfWork = unitOfWork;
+        _mapper = mapper;
     }
 
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Get()
+    public async Task<ActionResult<IEnumerable<SurveyDTO>>> Get()
     {
         var surveys = await _unitOfWork.Surveys.GetAllAsync();
-        return Ok(surveys);
+        return _mapper.Map<List<SurveyDTO>>(surveys);
     }
 
     [HttpGet("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Get(int id)
+    public async Task<ActionResult<SurveyDTO>> Get(int id)
     {
-        var survey = await _unitOfWork.Surveys.GetByIdAsync(id);
-        if (survey == null)
+        var surveys = await _unitOfWork.Surveys.GetByIdAsync(id);
+        if (surveys == null)
         {
-            return NotFound();
+            return NotFound($"Surveys with id {id} was not found.");
         }
-        return Ok(survey);
+        return Ok(_mapper.Map<SurveyDTO>(surveys));
     }
 
-    [HttpPost]
+      [HttpPost]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Post([FromBody] Surveys survey)
+    public async Task<ActionResult<Surveys>> Post(SurveyDTO surveysDto)
     {
-        _unitOfWork.Surveys.Add(survey);
+        var surveys = _mapper.Map<Surveys>(surveysDto);
+        _unitOfWork.Surveys.Add(surveys);
         await _unitOfWork.SaveAsync();
-        if (survey == null)
+        if (surveys == null)
         {
             return BadRequest();
         }
-        return CreatedAtAction(nameof(Post), new { id = survey.Id }, survey);
+        return CreatedAtAction(nameof(Post), new { id = surveysDto.Id }, surveys);
     }
 
     [HttpPut("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Put(int id, [FromBody] Surveys survey)
+    public async Task<IActionResult> Put(int id, [FromBody] SurveyDTO surveysDto)
     {
-        if (survey == null)
-            return BadRequest("El cuerpo de la solicitud está vacío.");
+        // Validación: objeto nulo
+        if (surveysDto == null)
+            return NotFound();
 
-        if (id != survey.Id)
-            return BadRequest("El ID del recurso no coincide con el ID del cuerpo de la solicitud.");
-
-        var existingSurvey = await _unitOfWork.Surveys.GetByIdAsync(id);
-        if (existingSurvey == null)
-        {
-            return NotFound($"Encuesta con ID {id} no encontrada.");
-        }
-
-        existingSurvey.Name = survey.Name;
-        existingSurvey.Description = survey.Description;
-        existingSurvey.ComponentHTML = survey.ComponentHTML;
-        existingSurvey.ComponentReact = survey.ComponentReact;
-        existingSurvey.Description = survey.Description;
-        existingSurvey.Instruction = survey.Instruction;
-
-        _unitOfWork.Surveys.Update(existingSurvey);
+        var surveys = _mapper.Map<Surveys>(surveysDto);
+        _unitOfWork.Surveys.Update(surveys);
         await _unitOfWork.SaveAsync();
-        return Ok(existingSurvey);
+        return Ok(surveysDto);
     }
 
     [HttpDelete("{id}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Delete(int id)
     {
-        var survey = await _unitOfWork.Surveys.GetByIdAsync(id);
-        if (survey == null)
-        {
-            return NotFound($"Encuesta con ID {id} no encontrada.");
-        }
+    var surveys = await _unitOfWork.Surveys.GetByIdAsync(id);
+    if (surveys == null)
+        return NotFound();
 
-        _unitOfWork.Surveys.Remove(survey);
-        await _unitOfWork.SaveAsync();
-        return Ok(survey);
+    _unitOfWork.Surveys.Remove(surveys);
+    await _unitOfWork.SaveAsync();
+
+    return NoContent();
     }
 }
