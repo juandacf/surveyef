@@ -6,6 +6,7 @@ using Application.Interface;
 using Domain.Entities;
 using Infrastructure.data;
 using Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories
 {
@@ -17,5 +18,11 @@ namespace Infrastructure.Repositories
         {
             _context = context;
         }
+
+        public new async Task<SumaryOptions> GetByIdAsync(int id) 
+{
+    return await _context.SumaryOptions 
+        .FirstOrDefaultAsync(p => p.Id == id) ?? throw new KeyNotFoundException($"Survey with id {id} was not found.");
+}
     }
 }
