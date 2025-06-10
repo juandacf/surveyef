@@ -1,5 +1,6 @@
 using Infrastructure.data;
 using Microsoft.EntityFrameworkCore;
+using AutoMapper;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +14,8 @@ builder.Services.AddDbContext<TallerSurveyDbContext>(options =>
     options.UseNpgsql(connectionString);
 });
 
+
+builder.Services.AddAutoMapper(Assembly.GetEntryAssembly());
 
 var app = builder.Build();
 

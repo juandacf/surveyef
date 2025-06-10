@@ -14,7 +14,7 @@ namespace Infrastructure.Repositories
             _context = context;
         }
 
-    public  async Task<Surveys> GetByIdAsync(int id) 
+    public new async Task<Surveys> GetByIdAsync(int id) 
 {
     return await _context.Surveys 
         .FirstOrDefaultAsync(p => p.Id == id) ?? throw new KeyNotFoundException($"Survey with id {id} was not found.");
