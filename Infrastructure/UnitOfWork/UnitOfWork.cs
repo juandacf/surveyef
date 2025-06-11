@@ -21,6 +21,9 @@ namespace Infrastructure.UnitOfWork
         private ISubQuestionsrepository _subQuestion;
         private ISumaryOptionsRepository _sumaryOption;
         private ISurveysRepository _survey;
+        
+        private IMemberRepository _member;  
+        private IRolRepository _rol;
         public UnitOfWork(TallerSurveyDbContext context)
         {
             _context = context;
@@ -135,6 +138,28 @@ namespace Infrastructure.UnitOfWork
             }
         }
 
+        public IMemberRepository Members
+        {
+            get
+            {
+                if (_member == null)
+                {
+                    _member = new MemberRepository(_context!);
+                }
+                return _member;
+            }
+        }
+        public IRolRepository Roles
+        {
+            get
+            {
+                if (_rol == null)
+                {
+                    _rol = new RolRepository(_context!);
+                }
+                return _rol;
+            }
+        }
         public void Dispose()
         {
             throw new NotImplementedException();

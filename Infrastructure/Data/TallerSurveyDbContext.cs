@@ -25,6 +25,9 @@ namespace Infrastructure.data
         public DbSet<Questions> Questions { get; set; }
         public DbSet<SumaryOptions> SumaryOptions { get; set; }
 
+        public DbSet<Member> Member { get; set; }
+
+        public DbSet<Rol> Rol { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
