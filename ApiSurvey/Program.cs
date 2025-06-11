@@ -1,5 +1,6 @@
 using System.Reflection;
 using Infrastructure.data;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,7 +17,8 @@ builder.Services.AddDbContext<TallerSurveyDbContext>(options =>
     options.UseNpgsql(connectionString);
 });
 
-
+builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+    .AddEntityFrameworkStores<TallerSurveyDbContext>();
 //builder.Services.AddAutoMapper(Assembly.GetEntryAssembly());
 
 var app = builder.Build();
@@ -28,6 +30,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseAuthorization();
+app.UseAuthentication();
 
 
 app.Run();
