@@ -7,6 +7,12 @@ namespace Infrastructure.Repositories;
 public class MemberRepository : GenericRepository<Member>, IMemberRepository { 
     protected readonly TallerSurveyDbContext _context;
     public MemberRepository(TallerSurveyDbContext context) : base(context) {}
+
+    public Task<Member> GetByRefreshTokenAsync(string refreshToken)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<Member> GetByUsernameAsync(string username)
     {
         return await _context.Member

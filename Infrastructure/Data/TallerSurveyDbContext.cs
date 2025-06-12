@@ -4,7 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Domain.Entities;  //Se debenimportar las entidades para incluirlas.
-using System.Reflection; 
+using System.Reflection;
+using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
 
 namespace Infrastructure.data
 {

@@ -6,8 +6,8 @@ using Domain.Entities;
 
 namespace Application.Interface
 {
-    public interface IRolRepository : IGenericRepository<Rol>
+    public interface IMemberRolsRepository: IGenericRepository<MemberRols>
     {
-        void Attach(Rol rol);
+        
     }
 }

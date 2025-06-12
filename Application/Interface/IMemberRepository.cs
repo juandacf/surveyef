@@ -6,8 +6,10 @@ using Domain.Entities;
 
 namespace Application.Interface
 {
-    public interface IMemberRepository :IGenericRepository<Member>
+    public interface IMemberRepository : IGenericRepository<Member>
     {
         Task<Member> GetByUsernameAsync(string username);
+        
+        Task<Member> GetByRefreshTokenAsync(string refreshToken);
     }
 }

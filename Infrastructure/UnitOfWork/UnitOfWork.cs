@@ -24,6 +24,7 @@ namespace Infrastructure.UnitOfWork
         
         private IMemberRepository _member;  
         private IRolRepository _rol;
+        private IMemberRolsRepository _memberRols;
         public UnitOfWork(TallerSurveyDbContext context)
         {
             _context = context;
@@ -158,6 +159,17 @@ namespace Infrastructure.UnitOfWork
                     _rol = new RolRepository(_context!);
                 }
                 return _rol;
+            }
+        }
+        public IMemberRolsRepository memberRols
+        {
+            get
+            {
+                if (_memberRols == null)
+                {
+                    _memberRols = new MemberRolRepository(_context!);
+                }
+                return _memberRols;
             }
         }
         public void Dispose()
