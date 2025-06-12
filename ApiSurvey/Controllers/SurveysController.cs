@@ -42,7 +42,7 @@ public class SurveysController : BaseApiController
         return Ok(_mapper.Map<SurveyDTO>(surveys));
     }
 
-      [HttpPost]
+    [HttpPost]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<Surveys>> Post(SurveyDTO surveysDto)

@@ -31,6 +31,7 @@ namespace ApiSurvey.Profiles
             CreateMap<Chapters, ChaptersDTO>().ReverseMap();
             CreateMap<CategoryOptions, CategoryOptionsDTO>().ReverseMap();
             CreateMap<CategoriesCatalog, CategoriesCatalogDTO>().ReverseMap();
+            
        } 
     }
 }
